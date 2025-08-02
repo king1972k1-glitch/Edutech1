@@ -3,70 +3,57 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Quiz – EduTech</title>
+  <title>📚 Quiz</title>
   <style>
     body {
-      background: #101624;
-      color: #fff;
+      background: #0f0c29;
+      color: #ffffff;
       font-family: 'Segoe UI', sans-serif;
       padding: 20px;
     }
     h2 {
       text-align: center;
-      color: #00ffc3;
+      color: #00ffcc;
     }
     .timer {
       text-align: center;
       font-size: 18px;
-      margin-bottom: 10px;
-      color: #ffde59;
+      margin: 10px 0;
     }
     .progress {
       height: 10px;
       background: #333;
       border-radius: 5px;
       overflow: hidden;
-      margin: 20px 0;
     }
     .progress-bar {
       height: 100%;
       width: 0%;
-      background: #00ffc3;
+      background: #00ffcc;
       transition: width 0.4s ease;
     }
     .question-box {
-      background: #1e1e2f;
+      background: #1f1f3f;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px #00ffc333;
-      margin-bottom: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
     }
-    .option-line {
-      margin-bottom: 12px;
-      background: #2b2f45;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #00ffcc66;
+    .option {
+      display: block;
+      margin: 10px 0;
     }
-    .option-line:hover {
-      background-color: #3a3f5c;
-      cursor: pointer;
-    }
-    .option-line input {
-      margin-right: 10px;
-    }
-    button {
-      margin: 10px;
+    .btn {
       padding: 10px 20px;
-      font-weight: bold;
-      border-radius: 6px;
+      margin: 5px;
       border: none;
-      background: #00ffc3;
+      border-radius: 5px;
+      background: #00ffcc;
       color: #000;
+      font-weight: bold;
       cursor: pointer;
     }
-    button:hover {
-      background: #00ffe6;
+    .btn:hover {
+      background: #00ffee;
     }
   </style>
 </head>
@@ -75,14 +62,12 @@
   <div class="timer">⏱ Time Left: <span id="time">15:00</span></div>
   <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
   <div class="question-box" id="questionBox"></div>
-
   <div style="text-align:center">
-    <button onclick="prevQuestion()">Previous</button>
-    <button onclick="nextQuestion()">Next</button>
-    <button onclick="submitQuiz()">Submit</button>
-    <button onclick="restartQuiz()">Restart</button>
+    <button class="btn" onclick="prevQuestion()">Previous</button>
+    <button class="btn" onclick="nextQuestion()">Next</button>
+    <button class="btn" onclick="submitQuiz()">Submit</button>
+    <button class="btn" onclick="restartQuiz()">Restart</button>
   </div>
-
   <div id="resultBox" style="margin-top: 30px;"></div>
 
   <script type="module">
@@ -103,7 +88,8 @@
     const db = getFirestore(app);
     const auth = getAuth();
 
-    let quizData = [], currentQuestion = 0, selectedAnswers = [], timer, quizUser = null;
+    let quizUser = null;
+    let quizData = [], currentQuestion = 0, selectedAnswers = [], timer;
 
     const subject = localStorage.getItem("selectedSubject");
     const chapter = localStorage.getItem("selectedChapter");
@@ -116,22 +102,21 @@
     });
 
     async function loadQuizFromFirestore(subject, chapter, quiz) {
-      const quizRef = doc(db, "quizzes", `${subject}_${chapter}_${quiz}`);
-      const snap = await getDoc(quizRef);
-      if (!snap.exists()) return alert("❌ Quiz not found");
+      const ref = doc(db, "quizzes", `${subject}_${chapter}_${quiz}`);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) return alert("❌ Quiz not found.");
       quizData = snap.data().questions;
+      currentQuestion = 0;
+      selectedAnswers = [];
       loadQuestion();
-      startTimer(900); // 15 minutes
+      startTimer(900); // 15 mins
     }
 
     function loadQuestion() {
       const q = quizData[currentQuestion];
-      let html = `<b>Q${currentQuestion + 1}:</b> ${q.question}<br><br>`;
+      let html = `<b>Q${currentQuestion + 1}:</b> ${q.question}<br>`;
       q.options.forEach((opt, i) => {
-        html += `
-          <div class="option-line">
-            <label><input type="radio" name="opt" value="${i}"> ${opt}</label>
-          </div>`;
+        html += `<label class="option"><input type="radio" name="opt" value="${i}"> ${opt}</label>`;
       });
       document.getElementById("questionBox").innerHTML = html;
       updateProgressBar();
@@ -182,7 +167,8 @@
       html += `<p>🎯 Score: ${correct}/${quizData.length}</p><p>🏅 XP Earned: ${xp}</p>`;
       document.getElementById("resultBox").innerHTML = html;
 
-      try {
+      // ✅ Save to Firestore
+      if (quizUser) {
         const ref = doc(db, "users", quizUser.uid);
         const snap = await getDoc(ref);
         const currentXP = (snap.exists() && snap.data().xp) || 0;
@@ -190,7 +176,7 @@
 
         await addDoc(collection(db, "quiz_scores"), {
           uid: quizUser.uid,
-          name: quizUser.displayName,
+          name: quizUser.displayName || "",
           subject,
           chapter,
           quiz,
@@ -198,9 +184,6 @@
           total: quizData.length,
           timestamp: Date.now()
         });
-        console.log("✅ Score saved");
-      } catch (err) {
-        console.error("❌ Failed to save score:", err.message);
       }
     }
 
