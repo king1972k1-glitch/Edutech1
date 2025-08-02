@@ -103,15 +103,20 @@
     }
 
     function loadQuestion() {
-      const q = quizData[currentQuestion];
-      let html = `<b>Q${currentQuestion + 1}:</b> ${q.question}<br>`;
-      q.options.forEach((opt, i) => {
-        html += `<label class="option"><input type="radio" name="opt" value="${i}"> ${opt}</label>`;
-      });
-      document.getElementById("questionBox").innerHTML = html;
-      updateProgressBar();
-    }
-
+  const q = quizData[currentQuestion];
+  let html = `<b>Q${currentQuestion + 1}:</b> ${q.question}<br><br>`;
+  q.options.forEach((opt, i) => {
+    html += `
+      <div class="option-line">
+        <label>
+          <input type="radio" name="opt" value="${i}" />
+          ${opt}
+        </label>
+      </div>`;
+  });
+  document.getElementById("questionBox").innerHTML = html;
+  updateProgressBar();
+                                         }
     function updateProgressBar() {
       const percent = ((currentQuestion + 1) / quizData.length) * 100;
       document.getElementById("progressBar").style.width = percent + "%";
