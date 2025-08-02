@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EduTech – Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      background: #121212;
+      font-family: 'Segoe UI', sans-serif;
+      color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      max-width: 600px;
+      background: #1e1e1e;
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+      color: #00bfa6;
+    }
+    p {
+      font-size: 1.05em;
+      line-height: 1.6;
+    }
+    ul {
+      text-align: left;
+      padding-left: 20px;
+    }
+    li {
+      margin: 10px 0;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 1em;
+      font-weight: bold;
+      background: #00bfa6;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #009e88;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🎉 EduTech Is Now Live! 🚀</h1>
+    <p>Welcome to your all-in-one learning platform for Class 10 students.</p>
+    <ul>
+      <li>✅ Google Login for secure access</li>
+      <li>✅ Beautiful Dashboard with subject tiles</li>
+      <li>✅ 🧪 Science, ➗ Math, 🌍 S.St, 📖 English, 📝 Hindi</li>
+      <li>✅ 40 Quizzes per Chapter (auto-locked for 24 hrs)</li>
+      <li>✅ XP System – Earn 5 XP per correct answer</li>
+      <li>✅ Badges & Level System 🥉🥈🥇</li>
+      <li>✅ Profile Editor + Avatar Picker (Anime style)</li>
+      <li>✅ Live Leaderboard with Avatars</li>
+      <li>✅ Manual + Automatic Leaderboards</li>
+      <li>✅ Admin Panel for managing all data</li>
+      <li>✅ Real-time Notifications + Announcements 🔔</li>
+      <li>✅ Full Score History & Analytics</li>
+      <li>✅ Mobile-friendly and super fast</li>
+    </ul>
+    <button onclick="loginWithGoogle()">🔐 Login with Google</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnmT_EMUajLzk0OEcuUsA6pjIJgJBqBm4",
+      authDomain: "quiz-dashboard-9a4ea.firebaseapp.com",
+      projectId: "quiz-dashboard-9a4ea",
+      storageBucket: "quiz-dashboard-9a4ea.appspot.com",
+      messagingSenderId: "901225401260",
+      appId: "1:901225401260:web:3879c1e3501ffe1cc08809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    window.loginWithGoogle = async function () {
+      const provider = new GoogleAuthProvider();
+      try {
+        const result = await signInWithPopup(auth, provider);
+        location.href = "dashboard.html";
+      } catch (error) {
+        alert("❌ Login failed: " + error.message);
+      }
+    }
+  </script>
+</body>
+</html>

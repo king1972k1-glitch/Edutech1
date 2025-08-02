@@ -1,0 +1,197 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EduTech – Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #121212;
+      color: #fff;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 20px;
+      background: #1e1e1e;
+      position: relative;
+    }
+    .left-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .popup {
+      position: absolute;
+      top: 65px;
+      left: 20px;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 15px;
+      display: none;
+      z-index: 10;
+    }
+    .popup p { margin: 5px 0; }
+    .popup button {
+      background: #00bfa6;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      margin-top: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .right-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .menu-btn {
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .side-panel {
+      position: fixed;
+      right: -100%;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      background: #1f1f1f;
+      transition: right 0.3s;
+      padding: 20px;
+      z-index: 9;
+    }
+    .side-panel.active {
+      right: 0;
+    }
+    .greeting {
+      font-size: 1.4em;
+      margin: 20px;
+    }
+    .subjects {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 20px;
+      padding: 0 20px 40px;
+    }
+    .subject-card {
+      background: #1e1e1e;
+      padding: 20px;
+      text-align: center;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 1px solid #333;
+    }
+    .subject-card:hover {
+      background: #2a2a2a;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="left-section">
+      <img src="/avatars/default.png" class="avatar" id="avatarBtn" />
+      <div id="xpDisplay">XP: 0</div>
+    </div>
+    <div class="right-section">
+      <span id="notificationBell">🔔</span>
+      <span class="menu-btn" onclick="togglePanel()">⋮</span>
+    </div>
+    <div class="popup" id="userPopup">
+      <p><strong id="userName">User</strong></p>
+      <img src="/avatars/default.png" id="popupAvatar" class="avatar" style="width:60px; height:60px;" />
+      <p id="userLevel">Level: 1</p>
+      <button onclick="location.href='profile.html'">✏️ Edit Profile</button>
+      <button onclick="logout()">🚪 Logout</button>
+    </div>
+  </header>  <div class="side-panel" id="sidePanel">
+    <h3>⚙️ Dashboard Menu</h3>
+    <!-- You can add menu items here -->
+  </div>  <div class="greeting" id="greeting">👋 Welcome!</div>  <div class="subjects">
+<div onclick="goToSubject('Science')">🧪 Science</div>
+<div onclick="goToSubject('Math')">➗ Math</div>
+<div onclick="goToSubject('English')">📖 English</div>
+<div onclick="goToSubject('S.st')">🌍 S.St</div>
+<div onclick="goToSubject('leaderboard')">leaderboard </div>
+
+
+
+  </div>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnmT_EMUajLzk0OEcuUsA6pjIJgJBqBm4",
+      authDomain: "quiz-dashboard-9a4ea.firebaseapp.com",
+      projectId: "quiz-dashboard-9a4ea",
+      storageBucket: "quiz-dashboard-9a4ea.appspot.com",
+      messagingSenderId: "901225401260",
+      appId: "1:901225401260:web:3879c1e3501ffe1cc08809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore(app);
+
+    const avatarBtn = document.getElementById("avatarBtn");
+    const popup = document.getElementById("userPopup");
+    avatarBtn.onclick = () => popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+
+    function togglePanel() {
+      document.getElementById("sidePanel").classList.toggle("active");
+    }
+
+    function goTo(page) {
+      window.location.href = page;
+    }
+
+    window.logout = () => {
+      signOut(auth).then(() => location.href = "index.html");
+    };
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) return location.href = "index.html";
+      const uid = user.uid;
+      const snap = await getDoc(doc(db, "users", uid));
+      if (snap.exists()) {
+        const data = snap.data();
+        document.getElementById("userName").textContent = data.name;
+        document.getElementById("greeting").textContent = `👋 Welcome, ${data.name}!`;
+        document.getElementById("xpDisplay").textContent = `XP: ${data.xp || 0}`;
+        document.getElementById("popupAvatar").src = `/avatars/${data.avatar || 'default'}.png`;
+        document.getElementById("avatarBtn").src = `/avatars/${data.avatar || 'default'}.png`;
+        document.getElementById("userLevel").textContent = `Level: ${data.level || 1}`;
+      }
+    });
+  </script>
+<script>
+  function goToSubject(subject) {
+    // Save subject to localStorage (for later use)
+    localStorage.setItem("selectedSubject", subject);
+
+    // Redirect to subject-specific page
+    if (subject === "Science") {
+      location.href = "science.html";
+    } else if (subject === "Math") {
+      location.href = "math.html";
+    } else if (subject === "S.St") {
+      location.href = "sst.html";
+    } else if (subject === "English") {
+      location.href = "english.html";
+    } else if (subject === "Hindi") {
+      location.href = "hindi.html";
+    }else if (subject === "leaderboard") {
+      location.href = "leaderboard.html";
+  }
+</script></body>
+</html>

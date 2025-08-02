@@ -1,0 +1,135 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard | EduTech</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #00bfa6;
+    }
+    .filters {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    select {
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #1e1e1e;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #333;
+    }
+    th {
+      background-color: #222;
+      color: #00bfa6;
+    }
+    tr:hover {
+      background-color: #2a2a2a;
+    }
+    img.avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <h2>🏆 Leaderboard</h2>  <div class="filters">
+    <select id="subjectFilter">
+      <option value="all">All Subjects</option>
+      <option value="Science">Science</option>
+      <option value="Math">Math</option>
+      <option value="S.St">S.St</option>
+      <option value="Hindi">Hindi</option>
+      <option value="English">English</option>
+    </select>
+    <select id="chapterFilter">
+      <option value="all">All Chapters</option>
+      <option value="Chapter1">Chapter 1</option>
+      <option value="Chapter2">Chapter 2</option>
+      <option value="Chapter3">Chapter 3</option>
+    </select>
+    <select id="timeFilter">
+      <option value="all">All Time</option>
+      <option value="7days">Last 7 Days</option>
+      <option value="30days">Last 30 Days</option>
+    </select>
+  </div>  <table>
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Avatar</th>
+        <th>Name</th>
+        <th>XP</th>
+        <th>Subject</th>
+        <th>Chapter</th>
+      </tr>
+    </thead>
+    <tbody id="leaderboardTable">
+      <!-- Leaderboard rows will be injected here -->
+    </tbody>
+  </table>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnmT_EMUajLzk0OEcuUsA6pjIJgJBqBm4",
+      authDomain: "quiz-dashboard-9a4ea.firebaseapp.com",
+      projectId: "quiz-dashboard-9a4ea",
+      storageBucket: "quiz-dashboard-9a4ea.appspot.com",
+      messagingSenderId: "901225401260",
+      appId: "1:901225401260:web:3879c1e3501ffe1cc08809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadLeaderboard() {
+      const scoresRef = collection(db, "scores");
+      const snap = await getDocs(scoresRef);
+      let allScores = [];
+
+      snap.forEach(doc => {
+        const data = doc.data();
+        if (data.name && data.xp !== undefined) allScores.push(data);
+      });
+
+      // Sort by XP descending
+      allScores.sort((a, b) => b.xp - a.xp);
+
+      const tbody = document.getElementById("leaderboardTable");
+      tbody.innerHTML = "";
+      allScores.slice(0, 20).forEach((user, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td><img class="avatar" src="${user.avatar || 'https://api.dicebear.com/7.x/thumbs/svg?seed=avatar'}" /></td>
+          <td>${user.name}</td>
+          <td>${user.xp}</td>
+          <td>${user.subject || '-'}</td>
+          <td>${user.chapter || '-'}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    loadLeaderboard();
+  </script></body>
+</html>

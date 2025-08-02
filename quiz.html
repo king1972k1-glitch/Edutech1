@@ -1,0 +1,188 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz | EduTech</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    .question-box {
+      background: #1f1f1f;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    .btn {
+      padding: 10px 15px;
+      margin: 5px;
+      border: none;
+      background: #00bfa6;
+      color: #000;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background: #00a68a;
+    }
+    .progress {
+      height: 10px;
+      background: #333;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: #00bfa6;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+    .timer {
+      text-align: center;
+      font-size: 1.2em;
+      color: #ffca28;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>📚 Quiz Time</h2>
+  <div class="timer">⏱ Time Left: <span id="time">15:00</span></div>
+  <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="question-box" id="questionBox"></div>
+  <div style="text-align:center">
+    <button class="btn" onclick="prevQuestion()">Previous</button>
+    <button class="btn" onclick="nextQuestion()">Next</button>
+    <button class="btn" onclick="submitQuiz()">Submit</button>
+    <button class="btn" onclick="restartQuiz()">Restart</button>
+  </div>
+  <div id="resultBox" style="margin-top: 30px;"></div>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnmT_EMUajLzk0OEcuUsA6pjIJgJBqBm4",
+      authDomain: "quiz-dashboard-9a4ea.firebaseapp.com",
+      projectId: "quiz-dashboard-9a4ea",
+      storageBucket: "quiz-dashboard-9a4ea.appspot.com",
+      messagingSenderId: "901225401260",
+      appId: "1:901225401260:web:3879c1e3501ffe1cc08809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth();
+
+    let quizData = [], currentQuestion = 0, selectedAnswers = [], timer, quizUser = null;
+
+    const subject = localStorage.getItem("selectedSubject");
+    const chapter = localStorage.getItem("selectedChapter");
+    const quiz = localStorage.getItem("selectedQuiz") || "Quiz1";
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return location.href = "index.html";
+      quizUser = user;
+      await loadQuizFromFirestore(subject, chapter, quiz);
+    });
+
+    async function loadQuizFromFirestore(subject, chapter, quiz) {
+      const key = `${subject}_${chapter}_${quiz}`;
+      console.log("Fetching quiz:", key);
+      const quizRef = doc(db, "quizzes", key);
+      const snap = await getDoc(quizRef);
+      if (!snap.exists()) return alert("❌ Quiz not found");
+      quizData = snap.data().questions;
+      loadQuestion();
+      startTimer(900); // 15 mins
+    }
+
+    function loadQuestion() {
+      const q = quizData[currentQuestion];
+      let html = `<b>Q${currentQuestion + 1}:</b> ${q.question}<br>`;
+      q.options.forEach((opt, i) => {
+        html += `<label class="option"><input type="radio" name="opt" value="${i}"> ${opt}</label>`;
+      });
+      document.getElementById("questionBox").innerHTML = html;
+      updateProgressBar();
+    }
+
+    function updateProgressBar() {
+      const percent = ((currentQuestion + 1) / quizData.length) * 100;
+      document.getElementById("progressBar").style.width = percent + "%";
+    }
+
+    window.nextQuestion = function () {
+      saveAnswer();
+      if (currentQuestion < quizData.length - 1) {
+        currentQuestion++;
+        loadQuestion();
+      }
+    }
+
+    window.prevQuestion = function () {
+      saveAnswer();
+      if (currentQuestion > 0) {
+        currentQuestion--;
+        loadQuestion();
+      }
+    }
+
+    function saveAnswer() {
+      const opts = document.getElementsByName("opt");
+      for (let opt of opts) {
+        if (opt.checked) selectedAnswers[currentQuestion] = parseInt(opt.value);
+      }
+    }
+
+    window.submitQuiz = async function () {
+      saveAnswer();
+      clearInterval(timer);
+      let correct = 0, html = "<h3>Results:</h3>";
+
+      quizData.forEach((q, i) => {
+        const ans = selectedAnswers[i];
+        const userAns = ans !== undefined ? q.options[ans] : "Not Attempted";
+        const isCorrect = userAns === q.answer;
+        if (isCorrect) correct++;
+        html += `<p><b>Q${i + 1}:</b> ${q.question}<br>👉 Your: ${userAns}<br>✅ Correct: ${q.answer}</p>`;
+      });
+
+      const xp = correct * 5;
+      html += `<p>🎯 Score: ${correct}/${quizData.length}</p><p>🏅 XP Earned: ${xp}</p>`;
+      document.getElementById("resultBox").innerHTML = html;
+
+      const ref = doc(db, "users", quizUser.uid);
+      const snap = await getDoc(ref);
+      const currentXP = (snap.exists() && snap.data().xp) || 0;
+      await updateDoc(ref, { xp: currentXP + xp });
+    }
+
+    window.restartQuiz = function () {
+      currentQuestion = 0;
+      selectedAnswers = [];
+      document.getElementById("resultBox").innerHTML = "";
+      loadQuestion();
+      startTimer(900);
+    }
+
+    function startTimer(seconds) {
+      let time = seconds;
+      const timerEl = document.getElementById("time");
+      timer = setInterval(() => {
+        const min = Math.floor(time / 60);
+        const sec = time % 60;
+        timerEl.textContent = `${min}:${sec < 10 ? '0' + sec : sec}`;
+        if (--time < 0) {
+          clearInterval(timer);
+          submitQuiz();
+        }
+      }, 1000);
+    }
+  </script></body>
+</html>

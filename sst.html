@@ -1,0 +1,96 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S.St Quizzes | EduTech</title>
+  <style>
+    body {
+      background: #121212;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #00e6e6;
+    }
+    .chapter {
+      background: #1e1e1e;
+      padding: 20px;
+      margin: 20px auto;
+      border-radius: 10px;
+      max-width: 600px;
+    }
+    h3 {
+      margin-bottom: 10px;
+    }
+    .quiz-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .quiz-buttons button {
+      background: #00e6e6;
+      color: #000;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .quiz-buttons button:hover {
+      background: #00cccc;
+    }
+  </style>
+</head>
+<body>
+  <h2>🌍 Social Science – Choose Chapter & Quiz</h2>
+  <div id="chapterContainer"></div>  <script>
+    const chapters = [
+      // History
+      "The Rise of Nationalism in Europe",
+      "Nationalism in India",
+
+      // Geography
+      "Resources and Development",
+      "Forest and Wildlife Resources",
+      "Water Resources",
+
+      // Civics
+      "Power Sharing",
+      "Federalism",
+      "Democracy and Diversity",
+
+      // Economics
+      "Development",
+      "Sectors of the Indian Economy",
+      "Money and Credit"
+    ];
+
+    const chapterContainer = document.getElementById("chapterContainer");
+
+    chapters.forEach((chapter, index) => {
+      const chapterDiv = document.createElement("div");
+      chapterDiv.className = "chapter";
+      chapterDiv.innerHTML = `<h3>Chapter ${index + 1}: ${chapter}</h3>`;
+
+      const quizButtons = document.createElement("div");
+      quizButtons.className = "quiz-buttons";
+
+      for (let i = 1; i <= 40; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = `Quiz ${i}`;
+        btn.onclick = () => {
+          localStorage.setItem("selectedSubject", "S.St");
+          localStorage.setItem("selectedChapter", `Chapter${index + 1}`);
+          localStorage.setItem("selectedQuiz", `Quiz${i}`);
+          location.href = "quiz.html";
+        };
+        quizButtons.appendChild(btn);
+      }
+
+      chapterDiv.appendChild(quizButtons);
+      chapterContainer.appendChild(chapterDiv);
+    });
+  </script></body>
+</html>

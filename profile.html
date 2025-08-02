@@ -1,0 +1,140 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Profile | EduTech</title>
+  <style>
+    body {
+      background: #121212;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 30px;
+    }
+    h2 {
+      text-align: center;
+      color: #00bfa6;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: none;
+    }
+    button {
+      background: #00bfa6;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #00a68a;
+    }
+    .avatar-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+      justify-content: center;
+    }
+    .avatar-preview img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+    }
+    .avatar-preview img.selected {
+      border-color: #00bfa6;
+    }
+  </style>
+</head>
+<body>
+  <h2>🧑‍🎓 Edit Profile</h2>
+  <div class="container">
+    <label for="displayName">👤 Display Name</label>
+    <input type="text" id="displayName" placeholder="Enter your name" /><label>🎭 Choose Avatar</label>
+<div class="avatar-preview" id="avatarList"></div>
+
+<button onclick="saveProfile()">💾 Save Changes</button>
+<button onclick="location.href='dashboard.html'">🔙 Back to Dashboard</button>
+
+  </div>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnmT_EMUajLzk0OEcuUsA6pjIJgJBqBm4",
+      authDomain: "quiz-dashboard-9a4ea.firebaseapp.com",
+      projectId: "quiz-dashboard-9a4ea",
+      storageBucket: "quiz-dashboard-9a4ea.appspot.com",
+      messagingSenderId: "901225401260",
+      appId: "1:901225401260:web:3879c1e3501ffe1cc08809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth();
+
+    const avatars = [
+      "luffy.png", "robin.png", "sanji.png",
+      "zoro.png", "goku.png", "kaneki.png",
+      "makima.png", "hinata.png", "itachi.png"
+    ];
+
+    let selectedAvatar = avatars[0];
+    let currentUID = null;
+
+    function renderAvatars() {
+      const list = document.getElementById("avatarList");
+      list.innerHTML = "";
+      avatars.forEach(url => {
+        const img = document.createElement("img");
+        img.src = `./avatars/${url}`;
+        img.onclick = () => {
+          selectedAvatar = `./avatars/${url}`;
+          document.querySelectorAll(".avatar-preview img").forEach(i => i.classList.remove("selected"));
+          img.classList.add("selected");
+        };
+        list.appendChild(img);
+      });
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return location.href = "index.html";
+      currentUID = user.uid;
+      const ref = doc(db, "users", currentUID);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const u = snap.data();
+        document.getElementById("displayName").value = u.name || "";
+        selectedAvatar = u.avatar || avatars[0];
+      }
+      renderAvatars();
+      document.querySelectorAll(".avatar-preview img").forEach(img => {
+        if (img.src.includes(selectedAvatar)) img.classList.add("selected");
+      });
+    });
+
+    window.saveProfile = async function () {
+      const name = document.getElementById("displayName").value.trim();
+      if (!name) return alert("Name cannot be empty");
+      const ref = doc(db, "users", currentUID);
+      await updateDoc(ref, { name: name, avatar: selectedAvatar });
+      alert("✅ Profile updated!");
+      location.href = "dashboard.html";
+    }
+  </script></body>
+</html>

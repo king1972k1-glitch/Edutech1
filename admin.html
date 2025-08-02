@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel – EduTech</title>
+  <style>
+    body {
+      background: linear-gradient(120deg, #0f0c29, #302b63, #24243e);
+      font-family: 'Segoe UI', sans-serif;
+      color: #00ffcc;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #00ffff;
+    }
+    .section {
+      border: 2px solid #00ffff;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 900px;
+    }
+    input, select, button, textarea {
+      padding: 10px;
+      margin: 5px;
+      border-radius: 6px;
+      border: 1px solid #00cccc;
+      background: #1a1a1a;
+      color: #00ffcc;
+      width: 100%;
+    }
+    button {
+      cursor: pointer;
+      background: #00ffcc;
+      color: #000;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #00ffff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #00cccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #1f1f3f;
+    }
+  </style>
+</head>
+<body>
+  <h2>👨‍💻 Admin Panel – EduTech</h2>
+
+  <div class="section">
+    <h3>📊 Platform Analytics</h3>
+    <div id="adminAnalytics"></div>
+  </div>
+
+  <div class="section">
+    <h3>📢 Send Message to All Users</h3>
+    <textarea id="adminMsg" placeholder="Enter announcement message..."></textarea>
+    <button onclick="sendMessage()">📨 Send Message</button>
+  </div>
+
+  <div class="section">
+    <h3>👥 All Users & Stats</h3>
+    <label>Filter by Role:</label>
+    <select id="roleFilter">
+      <option value="all">All</option>
+      <option value="student">Student</option>
+      <option value="admin">Admin</option>
+      <option value="blocked">Blocked</option>
+    </select>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>XP</th>
+          <th>Role</th>
+          <th>UID</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="userTable"></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h3>📦 Bulk Upload Questions</h3>
+    <select id="bulkSubject">
+      <option value="">-- Select Subject --</option>
+      <option value="Science">Science</option>
+      <option value="Math">Math</option>
+      <option value="S.St">S.St</option>
+      <option value="Hindi">Hindi</option>
+      <option value="English">English</option>
+    </select>
+    <input id="bulkChapter" placeholder="Chapter Name (e.g., Chapter1)" />
+    <input id="bulkQuiz" placeholder="Quiz Number (e.g., Quiz1)" />
+    <textarea id="bulkData" placeholder='Paste questions in JSON format...' rows="10"></textarea>
+    <button onclick="uploadBulkQuestions()">📤 Upload Questions</button>
+    <p style="font-size: 0.85em; color: #00cccc;">
+      Sample:<br>
+      <pre>[
+  {
+    "question": "What is 2+2?",
+    "options": ["2", "3", "4", "5"],
+    "answer": "4"
+  }
+]</pre>
+    </p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAnmT_EMUajLzk0OEcuUsA6pjIJgJBqBm4",
+      authDomain: "quiz-dashboard-9a4ea.firebaseapp.com",
+      projectId: "quiz-dashboard-9a4ea",
+      storageBucket: "quiz-dashboard-9a4ea.appspot.com",
+      messagingSenderId: "901225401260",
+      appId: "1:901225401260:web:3879c1e3501ffe1cc08809"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth();
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return location.href = "index.html";
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      if (!snap.exists() || snap.data().role !== "admin") {
+        alert("Access denied. You are not an admin.");
+        location.href = "dashboard.html";
+      }
+    });
+
+    async function loadAdminAnalytics() {
+      const analyticsDiv = document.getElementById("adminAnalytics");
+
+      let userCount = 0;
+      let totalXP = 0;
+      let quizCount = 0;
+      let attemptCount = 0;
+
+      const usersSnap = await getDocs(collection(db, "users"));
+      userCount = usersSnap.size;
+      usersSnap.forEach(doc => totalXP += doc.data().xp || 0);
+
+      const quizzesSnap = await getDocs(collection(db, "quizzes"));
+      quizCount = quizzesSnap.size;
+
+      const attemptsSnap = await getDocs(collection(db, "quiz_scores"));
+      attemptCount = attemptsSnap.size;
+
+      analyticsDiv.innerHTML = `
+        <p>👥 Total Users: <b>${userCount}</b></p>
+        <p>🧠 Total XP Earned: <b>${totalXP}</b></p>
+        <p>📦 Quizzes Uploaded: <b>${quizCount}</b></p>
+        <p>📝 Quiz Attempts Recorded: <b>${attemptCount}</b></p>
+      `;
+    }
+    loadAdminAnalytics();
+
+    window.sendMessage = async function () {
+      const msg = document.getElementById("adminMsg").value.trim();
+      if (!msg) return alert("Message cannot be empty");
+      await setDoc(doc(db, "announcements", "latest"), {
+        message: msg,
+        timestamp: Date.now()
+      });
+      alert("📢 Message sent!");
+      document.getElementById("adminMsg").value = "";
+    }
+
+    const table = document.getElementById("userTable");
+    const roleFilter = document.getElementById("roleFilter");
+    roleFilter.addEventListener("change", renderUsers);
+
+    async function renderUsers() {
+      const usersSnap = await getDocs(collection(db, "users"));
+      table.innerHTML = "";
+      usersSnap.forEach(docSnap => {
+        const u = docSnap.data();
+        const uid = docSnap.id;
+        if (roleFilter.value !== "all" && u.role !== roleFilter.value) return;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${u.name}</td>
+          <td>${u.email}</td>
+          <td>${u.xp || 0}</td>
+          <td>${u.role}</td>
+          <td>${uid}</td>
+          <td>
+            <button onclick="modifyXP('${uid}', ${u.xp || 0})">Modify XP</button>
+            <button onclick="toggleBlock('${uid}', '${u.role}')">Block/Unblock</button>
+          </td>`;
+        table.appendChild(tr);
+      });
+    }
+    renderUsers();
+
+    window.modifyXP = async function(uid, currentXP) {
+      const change = parseInt(prompt("Enter XP to add or subtract (e.g., +50 or -30):"));
+      if (isNaN(change)) return;
+      await setDoc(doc(db, "users", uid), { xp: Math.max(0, currentXP + change) }, { merge: true });
+      alert("✅ XP updated.");
+      renderUsers();
+    };
+
+    window.toggleBlock = async function(uid, currentRole) {
+      const newRole = currentRole === "blocked" ? "student" : "blocked";
+      await setDoc(doc(db, "users", uid), { role: newRole }, { merge: true });
+      alert(`User role changed to ${newRole}`);
+      renderUsers();
+    };
+
+    window.uploadBulkQuestions = async function () {
+      const subject = document.getElementById("bulkSubject").value.trim();
+      const chapter = document.getElementById("bulkChapter").value.trim();
+      const quiz = document.getElementById("bulkQuiz").value.trim();
+      const text = document.getElementById("bulkData").value.trim();
+
+      if (!subject || !chapter || !quiz || !text) return alert("Please fill all fields");
+
+      let data;
+      try {
+        data = JSON.parse(text);
+        if (!Array.isArray(data)) throw new Error("Must be an array of questions");
+      } catch (e) {
+        return alert("❌ Invalid JSON format: " + e.message);
+      }
+
+      try {
+        await setDoc(doc(db, "quizzes", `${subject}_${chapter}_${quiz}`), { questions: data });
+        alert("✅ Questions uploaded successfully");
+        document.getElementById("bulkData").value = "";
+      } catch (err) {
+        alert("❌ Upload failed: " + err.message);
+      }
+    };
+  </script>
+</body>
+</html>
