@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -68,9 +67,7 @@
     <button class="btn" onclick="submitQuiz()">Submit</button>
     <button class="btn" onclick="restartQuiz()">Restart</button>
   </div>
-  <div id="resultBox" style="margin-top: 30px;"></div>
-
-  <script type="module">
+  <div id="resultBox" style="margin-top: 30px;"></div>  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, doc, getDoc, updateDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -109,7 +106,7 @@
       currentQuestion = 0;
       selectedAnswers = [];
       loadQuestion();
-      startTimer(900); // 15 mins
+      startTimer(900);
     }
 
     function loadQuestion() {
@@ -221,6 +218,5 @@
         }
       }, 1000);
     }
-  </script>
-</body>
+  </script></body>
 </html>
