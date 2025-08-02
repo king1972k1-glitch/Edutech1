@@ -1,52 +1,72 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quiz | EduTech</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz – EduTech</title>
   <style>
     body {
-      background-color: #121212;
+      background: #101624;
       color: #fff;
       font-family: 'Segoe UI', sans-serif;
       padding: 20px;
     }
-    .question-box {
-      background: #1f1f1f;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 20px;
+    h2 {
+      text-align: center;
+      color: #00ffc3;
     }
-    .btn {
-      padding: 10px 15px;
-      margin: 5px;
-      border: none;
-      background: #00bfa6;
-      color: #000;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .btn:hover {
-      background: #00a68a;
+    .timer {
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #ffde59;
     }
     .progress {
       height: 10px;
       background: #333;
       border-radius: 5px;
       overflow: hidden;
-      margin-bottom: 20px;
+      margin: 20px 0;
     }
     .progress-bar {
       height: 100%;
-      background: #00bfa6;
       width: 0%;
+      background: #00ffc3;
       transition: width 0.4s ease;
     }
-    .timer {
-      text-align: center;
-      font-size: 1.2em;
-      color: #ffca28;
+    .question-box {
+      background: #1e1e2f;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #00ffc333;
       margin-bottom: 20px;
+    }
+    .option-line {
+      margin-bottom: 12px;
+      background: #2b2f45;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #00ffcc66;
+    }
+    .option-line:hover {
+      background-color: #3a3f5c;
+      cursor: pointer;
+    }
+    .option-line input {
+      margin-right: 10px;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-weight: bold;
+      border-radius: 6px;
+      border: none;
+      background: #00ffc3;
+      color: #000;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #00ffe6;
     }
   </style>
 </head>
@@ -55,15 +75,19 @@
   <div class="timer">⏱ Time Left: <span id="time">15:00</span></div>
   <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
   <div class="question-box" id="questionBox"></div>
+
   <div style="text-align:center">
-    <button class="btn" onclick="prevQuestion()">Previous</button>
-    <button class="btn" onclick="nextQuestion()">Next</button>
-    <button class="btn" onclick="submitQuiz()">Submit</button>
-    <button class="btn" onclick="restartQuiz()">Restart</button>
+    <button onclick="prevQuestion()">Previous</button>
+    <button onclick="nextQuestion()">Next</button>
+    <button onclick="submitQuiz()">Submit</button>
+    <button onclick="restartQuiz()">Restart</button>
   </div>
-  <div id="resultBox" style="margin-top: 30px;"></div>  <script type="module">
+
+  <div id="resultBox" style="margin-top: 30px;"></div>
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
@@ -92,31 +116,27 @@
     });
 
     async function loadQuizFromFirestore(subject, chapter, quiz) {
-      const key = `${subject}_${chapter}_${quiz}`;
-      console.log("Fetching quiz:", key);
-      const quizRef = doc(db, "quizzes", key);
+      const quizRef = doc(db, "quizzes", `${subject}_${chapter}_${quiz}`);
       const snap = await getDoc(quizRef);
       if (!snap.exists()) return alert("❌ Quiz not found");
       quizData = snap.data().questions;
       loadQuestion();
-      startTimer(900); // 15 mins
+      startTimer(900); // 15 minutes
     }
 
     function loadQuestion() {
-  const q = quizData[currentQuestion];
-  let html = `<b>Q${currentQuestion + 1}:</b> ${q.question}<br><br>`;
-  q.options.forEach((opt, i) => {
-    html += `
-      <div class="option-line">
-        <label>
-          <input type="radio" name="opt" value="${i}" />
-          ${opt}
-        </label>
-      </div>`;
-  });
-  document.getElementById("questionBox").innerHTML = html;
-  updateProgressBar();
-                                         }
+      const q = quizData[currentQuestion];
+      let html = `<b>Q${currentQuestion + 1}:</b> ${q.question}<br><br>`;
+      q.options.forEach((opt, i) => {
+        html += `
+          <div class="option-line">
+            <label><input type="radio" name="opt" value="${i}"> ${opt}</label>
+          </div>`;
+      });
+      document.getElementById("questionBox").innerHTML = html;
+      updateProgressBar();
+    }
+
     function updateProgressBar() {
       const percent = ((currentQuestion + 1) / quizData.length) * 100;
       document.getElementById("progressBar").style.width = percent + "%";
@@ -162,10 +182,26 @@
       html += `<p>🎯 Score: ${correct}/${quizData.length}</p><p>🏅 XP Earned: ${xp}</p>`;
       document.getElementById("resultBox").innerHTML = html;
 
-      const ref = doc(db, "users", quizUser.uid);
-      const snap = await getDoc(ref);
-      const currentXP = (snap.exists() && snap.data().xp) || 0;
-      await updateDoc(ref, { xp: currentXP + xp });
+      try {
+        const ref = doc(db, "users", quizUser.uid);
+        const snap = await getDoc(ref);
+        const currentXP = (snap.exists() && snap.data().xp) || 0;
+        await updateDoc(ref, { xp: currentXP + xp });
+
+        await addDoc(collection(db, "quiz_scores"), {
+          uid: quizUser.uid,
+          name: quizUser.displayName,
+          subject,
+          chapter,
+          quiz,
+          score: correct,
+          total: quizData.length,
+          timestamp: Date.now()
+        });
+        console.log("✅ Score saved");
+      } catch (err) {
+        console.error("❌ Failed to save score:", err.message);
+      }
     }
 
     window.restartQuiz = function () {
@@ -189,5 +225,6 @@
         }
       }, 1000);
     }
-  </script></body>
-</html>
+  </script>
+</body>
+  </html>
