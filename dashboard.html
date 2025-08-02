@@ -156,23 +156,7 @@
     window.logout = () => {
       signOut(auth).then(() => location.href = "index.html");
     };
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const auth = getAuth();
-const db = getFirestore();
-
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return location.href = "index.html";
-
-  const userRef = doc(db, "users", user.uid);
-  const snap = await getDoc(userRef);
-  const data = snap.data();
-
-  const avatarUrl = data?.avatar || "images/default.png"; // fallback
-  const avatarDiv = document.getElementById("userAvatar");
-  avatarDiv.innerHTML = `<img src="${avatarUrl}" alt="avatar" />`;
-});
+    
 
     onAuthStateChanged(auth, async user => {
       if (!user) return location.href = "index.html";
