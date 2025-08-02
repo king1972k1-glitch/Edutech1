@@ -77,6 +77,8 @@
       <option value="student">Student</option>
       <option value="admin">Admin</option>
       <option value="blocked">Blocked</option>
+      
+      
     </select>
     <table>
       <thead>
@@ -87,6 +89,7 @@
           <th>Role</th>
           <th>UID</th>
           <th>Actions</th>
+          <button onclick="viewUserHistory('${uid}')">View History</button>
         </tr>
       </thead>
       <tbody id="userTable"></tbody>
@@ -124,6 +127,13 @@
     import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+    window.viewUserHistory = function(uid) {
+  localStorage.setItem("adminViewUser", uid);
+  window.open("admin-user-history.html", "_blank");
+};
+
+
+    
     const firebaseConfig = {
       apiKey: "AIzaSyAnmT_EMUajLzk0OEcuUsA6pjIJgJBqBm4",
       authDomain: "quiz-dashboard-9a4ea.firebaseapp.com",
