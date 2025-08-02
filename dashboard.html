@@ -117,14 +117,11 @@
     <h3>⚙️ Dashboard Menu</h3>
     <!-- You can add menu items here -->
   </div>  <div class="greeting" id="greeting">👋 Welcome!</div>  <div class="subjects">
-<div onclick="goToSubject('Science')">🧪 Science</div>
-<div onclick="goToSubject('Math')">➗ Math</div>
-<div onclick="goToSubject('English')">📖 English</div>
-<div onclick="goToSubject('S.st')">🌍 S.St</div>
-<div onclick="goToSubject('leaderboard')">leaderboard </div>
-
-
-
+<div class="subject-tile" onclick="goToSubject('science')">🧪 Science</div>
+<div class="subject-tile" onclick="goToSubject('math')">➗ Math</div>
+<div class="subject-tile" onclick="goToSubject('sst')">🌍 S.St</div>
+<div class="subject-tile" onclick="goToSubject('english')">📖 English</div>
+<div class="subject-tile" onclick="goToSubject('leaderboard')">Leaderboard</div>
   </div>  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
