@@ -3,17 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin: User Quiz History</title>
+  <title>Admin – User Quiz History</title>
   <style>
     body {
       background: #0f0c29;
-      color: #ffffff;
       font-family: 'Segoe UI', sans-serif;
+      color: #ffffff;
       padding: 20px;
     }
     h2 {
       text-align: center;
       color: #00ffcc;
+    }
+    input {
+      width: 300px;
+      padding: 10px;
+      margin: 20px auto;
+      display: block;
+      border-radius: 5px;
+      border: 1px solid #00ffcc88;
+      background: #1a1a2e;
+      color: #fff;
+    }
+    button {
+      padding: 10px 20px;
+      background: #00ffcc;
+      border: none;
+      color: #000;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      display: block;
+      margin: auto;
+    }
+    button:hover {
+      background: #00ffee;
     }
     table {
       width: 100%;
@@ -32,12 +56,29 @@
     td {
       background: #1f1f3f;
     }
+    #error {
+      color: #ff5555;
+      text-align: center;
+      font-weight: bold;
+    }
+    #userInfo {
+      text-align: center;
+      margin-top: 10px;
+      color: #00ffc3;
+    }
   </style>
 </head>
 <body>
-  <h2>👨‍💻 Admin: User Quiz History</h2>
-  <div id="adminCheck" style="text-align:center; color: #ff6666; font-weight:bold;"></div>
-  <table>
+  <h2>👨‍💻 Admin: Check User Quiz History</h2>
+
+  <div id="error"></div>
+
+  <input id="uidInput" placeholder="Enter User UID..." />
+  <button onclick="loadUserHistory()">🔍 View History</button>
+
+  <div id="userInfo"></div>
+
+  <table id="resultTable" style="display:none;">
     <thead>
       <tr>
         <th>📘 Subject</th>
@@ -69,37 +110,57 @@
     const db = getFirestore(app);
     const auth = getAuth();
 
-    const table = document.getElementById("historyTable");
-    const checkDiv = document.getElementById("adminCheck");
+    const historyTable = document.getElementById("historyTable");
+    const resultTable = document.getElementById("resultTable");
+    const errorBox = document.getElementById("error");
+    const userInfo = document.getElementById("userInfo");
 
-    const targetUID = localStorage.getItem("adminViewUser");
-
-    if (!targetUID) {
-      checkDiv.innerText = "❌ No user selected.";
-      table.innerHTML = "";
-    }
+    let isAdmin = false;
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return location.href = "index.html";
-
-      // ✅ Admin Check
       const adminRef = doc(db, "users", user.uid);
-      const adminSnap = await getDoc(adminRef);
-      if (!adminSnap.exists() || adminSnap.data().role !== "admin") {
-        checkDiv.innerText = "❌ Access Denied: Admin Only";
-        table.innerHTML = "";
+      const snap = await getDoc(adminRef);
+      if (snap.exists() && snap.data().role === "admin") {
+        isAdmin = true;
+      } else {
+        errorBox.innerText = "❌ Access Denied: You are not an admin.";
+      }
+    });
+
+    window.loadUserHistory = async function () {
+      if (!isAdmin) return;
+
+      const uid = document.getElementById("uidInput").value.trim();
+      if (!uid) return alert("Please enter a UID.");
+
+      errorBox.innerText = "";
+      userInfo.innerText = "";
+      resultTable.style.display = "none";
+      historyTable.innerHTML = "";
+
+      // ✅ Get user info
+      const userSnap = await getDoc(doc(db, "users", uid));
+      if (!userSnap.exists()) {
+        errorBox.innerText = "❌ User not found.";
         return;
       }
 
-      // ✅ Load History of Selected UID
-      const q = query(collection(db, "quiz_scores"), where("uid", "==", targetUID));
-      const snap = await getDocs(q);
+      const u = userSnap.data();
+      userInfo.innerHTML = `<p><b>👤 Name:</b> ${u.name || "N/A"} &nbsp; | &nbsp; <b>📧 Email:</b> ${u.email || "N/A"}</p>`;
 
+      // ✅ Get quiz scores
+      const q = query(collection(db, "quiz_scores"), where("uid", "==", uid));
+      const snap = await getDocs(q);
       const data = [];
       snap.forEach(doc => data.push(doc.data()));
-      data.sort((a, b) => b.timestamp - a.timestamp);
+      if (data.length === 0) {
+        errorBox.innerText = "No quiz history found for this UID.";
+        return;
+      }
 
-      table.innerHTML = data.map(score => {
+      data.sort((a, b) => b.timestamp - a.timestamp);
+      historyTable.innerHTML = data.map(score => {
         const date = new Date(score.timestamp).toLocaleString();
         const xp = (score.score || 0) * 5;
         return `
@@ -112,7 +173,9 @@
             <td>${date}</td>
           </tr>`;
       }).join("");
-    });
+
+      resultTable.style.display = "table";
+    };
   </script>
 </body>
 </html>
