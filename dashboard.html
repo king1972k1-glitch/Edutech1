@@ -171,24 +171,10 @@
       }
     });
   </script>
-<script>
+  <script>
   function goToSubject(subject) {
-    // Save subject to localStorage (for later use)
-    localStorage.setItem("selectedSubject", subject);
-
-    // Redirect to subject-specific page
-    if (subject === "Science") {
-      location.href = "science.html";
-    } else if (subject === "Math") {
-      location.href = "math.html";
-    } else if (subject === "S.St") {
-      location.href = "sst.html";
-    } else if (subject === "English") {
-      location.href = "english.html";
-    } else if (subject === "Hindi") {
-      location.href = "hindi.html";
-    }else if (subject === "leaderboard") {
-      location.href = "leaderboard.html";
+    window.location.href = subject + ".html";
   }
-</script></body>
+  </script>
+</body>
 </html>
