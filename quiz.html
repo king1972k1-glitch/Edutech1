@@ -164,10 +164,13 @@
       });
 
       const xp = correct * 5;
-      html += `<p>🎯 Score: ${correct}/${quizData.length}</p><p>🏅 XP Earned: ${xp}</p>`;
+      const level = getLevel(xp);
+
+      html += `<p>🎯 Score: ${correct}/${quizData.length}</p>`;
+      html += `<p>🏅 XP Earned: ${xp}</p>`;
+      html += `<p>🏆 Level Earned This Quiz: ${level}</p>`;
       document.getElementById("resultBox").innerHTML = html;
 
-      // ✅ Save to Firestore
       if (quizUser) {
         const ref = doc(db, "users", quizUser.uid);
         const snap = await getDoc(ref);
@@ -185,6 +188,16 @@
           timestamp: Date.now()
         });
       }
+    }
+
+    function getLevel(xp) {
+      if (xp >= 4000) return "🧠 Genius";
+      if (xp >= 2400) return "🏅 Grandmaster";
+      if (xp >= 1200) return "🥇 Master";
+      if (xp >= 600) return "🥇 Gold";
+      if (xp >= 300) return "🥈 Silver";
+      if (xp >= 150) return "🥉 Bronze";
+      return "🎓 Beginner";
     }
 
     window.restartQuiz = function () {
@@ -210,4 +223,4 @@
     }
   </script>
 </body>
-  </html>
+</html>
